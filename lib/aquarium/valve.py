@@ -9,15 +9,22 @@ Usage:
 Options:
   -c CONFIG     : CONFIG を設定ファイルとして読み込んで実行します．[default: config.yaml]
 """
-
-
 import logging
 import enum
 
 
-class MODE(enum.Enum):
+class TARGET(enum.Enum):
     CO2 = 1
     AIR = 2
+
+
+class MODE(enum.Enum):
+    ON = 1
+    OFF = 0
+
+
+gpio_air = None
+gpio_co2 = None
 
 
 def is_rasberry_pi():
@@ -64,40 +71,6 @@ else:
             return
 
 
-# STAT_DIR_PATH = pathlib.Path("/dev/shm")
-
-# # STATE が WORKING になった際に作られるnnファイル．Duty 制御している場合，
-# # OFF Duty から ON Duty に遷移する度に変更日時が更新される．
-# # STATE が IDLE になった際に削除される．
-# # (OFF Duty になって実際にバルブを閉じただけでは削除されない)
-# STAT_PATH_VALVE_STATE_WORKING = STAT_DIR_PATH / "unit_cooler" / "valve" / "state" / "working"
-
-# # STATE が IDLE になった際に作られるファイル．
-# # (OFF Duty になって実際にバルブを閉じただけでは作られない)
-# # STATE が WORKING になった際に削除される．
-# STAT_PATH_VALVE_STATE_IDLE = STAT_DIR_PATH / "unit_cooler" / "valve" / "state" / "idle"
-
-# # 実際にバルブを開いた際に作られるファイル．
-# # 実際にバルブを閉じた際に削除される．
-# STAT_PATH_VALVE_OPEN = STAT_DIR_PATH / "unit_cooler" / "valve" / "open"
-
-# # 実際にバルブを閉じた際に作られるファイル．
-# # 実際にバルブを開いた際に削除される．
-# STAT_PATH_VALVE_CLOSE = STAT_DIR_PATH / "unit_cooler" / "valve" / "close"
-
-
-# # 電磁弁制御用の GPIO 端子番号．
-# # この端子が H になった場合に，水が出るように回路を組んでおく．
-# GPIO_PIN_DEFAULT = 17
-
-# pin_no = GPIO_PIN_DEFAULT
-# valve_lock = None
-# ctrl_hist = []
-
-gpio_air = None
-gpio_co2 = None
-
-
 def init(air=17, co2=27):
     global gpio_air
     global gpio_co2
@@ -111,19 +84,18 @@ def init(air=17, co2=27):
     GPIO.setup(gpio_air, GPIO.OUT)
     GPIO.setup(gpio_co2, GPIO.OUT)
 
-    control()
+    control(TARGET.AIR, MODE.ON)
+    control(TARGET.CO2, MODE.OFF)
 
 
-def control(mode=MODE.AIR):
+def control(target, mode):
     global gpio_air
     global gpio_co2
 
-    if mode == MODE.CO2:
-        GPIO.output(gpio_air, 0)
-        GPIO.output(gpio_co2, 1)
-    elif mode == MODE.AIR:
-        GPIO.output(gpio_air, 1)
-        GPIO.output(gpio_co2, 0)
+    if target == TARGET.CO2:
+        GPIO.output(gpio_co2, mode)
+    elif target == TARGET.AIR:
+        GPIO.output(gpio_air, mode)
     else:
         logging.warning("Unknown mode: {mode}".format(mode=mode))
 

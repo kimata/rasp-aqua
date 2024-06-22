@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
     config = local_lib.config.load(args["-c"])
 
-    aquarium.valve.init()
+    aquarium.valve.init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
     queue = Queue()
     pool = ThreadPool(processes=1)
@@ -102,12 +102,19 @@ if __name__ == "__main__":
     result = pool.apply_async(schedule_worker, (timezone, queue, config["liveness"]["file"]["scheduler"]))
 
     exec_time = datetime.datetime.now(timezone) + datetime.timedelta(minutes=1)
+
+    def control(target, mode):
+        global should_terminate
+
+        aquarium.valve.control(target, mode)
+        should_terminate = True
+
     queue.put(
         [
             {
                 "time": exec_time.strftime("%H:%M"),
-                "func": aquarium.valve.control,
-                "args": (aquarium.valve.MODE.CO2,),
+                "func": control,
+                "args": (aquarium.valve.TARGET.CO2, aquarium.valve.MODE.ON),
             }
         ]
     )
