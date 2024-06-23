@@ -8,12 +8,12 @@ RUN apt-get update && apt-get install --assume-yes \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/unit_cooler
+WORKDIR /opt/rasp-aqua
 
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-COPY pyproject.toml .
+COPY . .
 
 RUN poetry config virtualenvs.create false \
  && poetry install \
