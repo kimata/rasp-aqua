@@ -35,6 +35,9 @@ def is_rasberry_pi():
         if "BCM" in cpuinfo:
             return True
         else:
+            logging.warning(
+                "Since it is not running on a Raspberry Pi, the GPIO library is replaced with dummy functions."
+            )
             return False
     except Exception as e:
         return False
