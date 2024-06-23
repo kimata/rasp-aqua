@@ -55,7 +55,7 @@ def init_valve(config):
             mode = aquarium.valve.MODE.ON
 
             if judge[1] == 0:
-                reason = "now is between {start} - {end}".format(
+                reason = "now is between {start}-{end}".format(
                     start=config["valve"][target]["control"]["on"],
                     end=config["valve"][target]["control"]["off"],
                 )
@@ -72,7 +72,7 @@ def init_valve(config):
             mode = aquarium.valve.MODE.OFF
 
             if judge[1] == 0:
-                reason = "now is not between {start} - {end}".format(
+                reason = "now is not between {start}-{end}".format(
                     start=config["valve"][target]["control"]["on"],
                     end=config["valve"][target]["control"]["off"],
                 )
