@@ -32,18 +32,31 @@ def init(timezone, queue, liveness_file):
     return pool.apply_async(schedule_worker, (timezone, queue, liveness_file))
 
 
-def set_schedule(timezone, schedule_data):
-    schedule.clear()
+def schedule_task(*args):
+    func = args[0]
 
-    for entry in schedule_data:
-        logging.info(entry)
-        schedule.every().day.at(entry["time"], timezone).do(entry["func"], *entry["args"])
+    logging.info(
+        "Execute {file}:{func}".format(file=pathlib.Path(func.__code__.co_filename).name, func=func.__name__)
+    )
 
+    func(*args[1:])
+
+
+def schedule_status():
     for job in schedule.get_jobs():
         logging.info("Next run: {next_run}".format(next_run=job.next_run))
 
     idle_sec = schedule.idle_seconds()
-    logging.info("Time to next jobs is {idle:.1f} sec".format(idle=idle_sec))
+    if idle_sec is not None:
+        logging.info("Time to next jobs is {idle:.1f} sec".format(idle=idle_sec))
+
+
+def set_schedule(timezone, schedule_data):
+    schedule.clear()
+
+    for entry in schedule_data:
+        args = (entry["func"],) + entry["args"]
+        schedule.every().day.at(entry["time"], timezone).do(schedule_task, *args)
 
 
 def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
@@ -63,6 +76,7 @@ def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
             if not queue.empty():
                 schedule_data = queue.get()
                 set_schedule(timezone, schedule_data)
+                schedule_status()
 
             schedule.run_pending()
 
@@ -104,7 +118,8 @@ if __name__ == "__main__":
 
     result = init(timezone, queue, config["liveness"]["file"]["scheduler"])
 
-    exec_time = datetime.datetime.now(timezone) + datetime.timedelta(minutes=1)
+    now = datetime.datetime.now(timezone)
+    exec_time = now + datetime.timedelta(minutes=2 if now.second > 45 else 1)
 
     def control(target, mode):
         global should_terminate
