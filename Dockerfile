@@ -13,15 +13,11 @@ WORKDIR /opt/rasp-aqua
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-# NOTE: キャッシュを効かせたいので，まずは pyproject.toml のみコピーする
-COPY pyproject.toml .
+COPY . .
 
 RUN poetry config virtualenvs.create false \
- && poetry install --without local_lib --without aquarium \
+ && poetry install \
  && rm -rf ~/.cache
-
-COPY . .
-RUN poetry install
 
 FROM python:3.10.13-bookworm as prod
 
