@@ -17,14 +17,19 @@ import time
 import datetime
 import traceback
 import schedule
+from multiprocessing.pool import ThreadPool
 
 schedule_lock = None
 should_terminate = False
 
 
-def init():
+def init(timezone, queue, liveness_file):
     global schedule_lock
     schedule_lock = threading.Lock()
+
+    pool = ThreadPool(processes=1)
+
+    return pool.apply_async(schedule_worker, (timezone, queue, liveness_file))
 
 
 def set_schedule(timezone, schedule_data):
@@ -80,7 +85,6 @@ def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
 if __name__ == "__main__":
     from docopt import docopt
     from multiprocessing import Queue
-    from multiprocessing.pool import ThreadPool
     import pytz
 
     import local_lib.logger
@@ -95,11 +99,10 @@ if __name__ == "__main__":
 
     aquarium.valve.init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
-    queue = Queue()
-    pool = ThreadPool(processes=1)
     timezone = pytz.timezone("Asia/Tokyo")
+    queue = Queue()
 
-    result = pool.apply_async(schedule_worker, (timezone, queue, config["liveness"]["file"]["scheduler"]))
+    result = init(timezone, queue, config["liveness"]["file"]["scheduler"])
 
     exec_time = datetime.datetime.now(timezone) + datetime.timedelta(minutes=1)
 

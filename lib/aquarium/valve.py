@@ -92,10 +92,12 @@ def control(target, mode):
     global gpio_air
     global gpio_co2
 
+    logging.info("valve {target} = {mode}".format(target=target.name, mode=mode.name))
+
     if target == TARGET.CO2:
-        GPIO.output(gpio_co2, mode)
+        GPIO.output(gpio_co2, mode.value)
     elif target == TARGET.AIR:
-        GPIO.output(gpio_air, mode)
+        GPIO.output(gpio_air, mode.value)
     else:
         logging.warning("Unknown mode: {mode}".format(mode=mode))
 
@@ -114,5 +116,5 @@ if __name__ == "__main__":
 
     init()
 
-    control(MODE.AIR)
-    control(MODE.CO2)
+    control(TARGET.AIR, MODE.ON)
+    control(TARGET.CO2, MODE.OFF)
