@@ -21,6 +21,7 @@ from multiprocessing.pool import ThreadPool
 
 schedule_lock = None
 should_terminate = False
+executed_job = False
 
 
 def init(timezone, queue, liveness_file):
@@ -33,6 +34,8 @@ def init(timezone, queue, liveness_file):
 
 
 def schedule_task(*args):
+    global executed_job
+
     func = args[0]
 
     logging.info(
@@ -41,6 +44,8 @@ def schedule_task(*args):
 
     func(*args[1:])
 
+    executed_job = True
+
 
 def schedule_status():
     for job in schedule.get_jobs():
@@ -48,7 +53,7 @@ def schedule_status():
 
     idle_sec = schedule.idle_seconds()
     if idle_sec is not None:
-        logging.info("Time to next jobs is {idle:.1f} sec".format(idle=idle_sec))
+        logging.info("Time to next jobs is {time}".format(time=datetime.timedelta(seconds=int(idle_sec))))
 
 
 def set_schedule(timezone, schedule_data):
@@ -61,6 +66,7 @@ def set_schedule(timezone, schedule_data):
 
 def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
     global should_terminate
+    global executed_job
 
     liveness_file = pathlib.Path(liveness_path)
     liveness_file.parent.mkdir(parents=True, exist_ok=True)
@@ -79,6 +85,10 @@ def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
                 schedule_status()
 
             schedule.run_pending()
+
+            if executed_job:
+                schedule_status()
+                executed_job = False
 
             sleep_sec = max(check_interval_sec - (time.time() - time_start), 1)
             logging.debug("Sleep {sleep_sec:.1f} sec...".format(sleep_sec=sleep_sec))
