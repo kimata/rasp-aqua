@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     args = docopt(__doc__)
 
-    local_lib.logger.init(NAME, level=logging.INFO)
+    local_lib.logger.init("hems.rasp-aqua", level=logging.INFO)
 
     config_file = args["-c"]
     config = local_lib.config.load(args["-c"])
