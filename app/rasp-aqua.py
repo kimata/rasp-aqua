@@ -93,30 +93,19 @@ def init_valve(config):
 
 
 def set_schedule(config, queue):
-    queue.put(
-        [
-            {
-                "time": config["valve"]["air"]["control"]["on"],
-                "func": aquarium.valve.control,
-                "args": (aquarium.valve.TARGET.AIR, aquarium.valve.MODE.ON),
-            },
-            {
-                "time": config["valve"]["air"]["control"]["off"],
-                "func": aquarium.valve.control,
-                "args": (aquarium.valve.TARGET.AIR, aquarium.valve.MODE.OFF),
-            },
-            {
-                "time": config["valve"]["co2"]["control"]["on"],
-                "func": aquarium.valve.control,
-                "args": (aquarium.valve.TARGET.CO2, aquarium.valve.MODE.ON),
-            },
-            {
-                "time": config["valve"]["co2"]["control"]["off"],
-                "func": aquarium.valve.control,
-                "args": (aquarium.valve.TARGET.CO2, aquarium.valve.MODE.OFF),
-            },
-        ]
-    )
+    task_list = []
+    for target in ["air", "co2"]:
+        for mode in ["on", "off"]:
+            task_list.append(
+                {
+                    "name": "{target} {mode}".format(target=target, mode=mode),
+                    "time": config["valve"][target]["control"][mode],
+                    "func": aquarium.valve.control,
+                    "args": (aquarium.valve.TARGET[target.upper()], aquarium.valve.MODE[mode.upper()]),
+                }
+            )
+
+    queue.put(task_list)
 
 
 def execute(config):

@@ -33,13 +33,15 @@ def init(timezone, queue, liveness_file):
     return pool.apply_async(schedule_worker, (timezone, queue, liveness_file))
 
 
-def schedule_task(*args):
+def schedule_task(*args, **kwargs):
     global executed_job
 
     func = args[0]
 
     logging.info(
-        "Execute {file}:{func}".format(file=pathlib.Path(func.__code__.co_filename).name, func=func.__name__)
+        "Execute {name} ({file}:{func})".format(
+            name=kwargs["name"], file=pathlib.Path(func.__code__.co_filename).name, func=func.__name__
+        )
     )
 
     func(*args[1:])
@@ -48,8 +50,10 @@ def schedule_task(*args):
 
 
 def schedule_status():
-    for job in schedule.get_jobs():
-        logging.info("Next run: {next_run}".format(next_run=job.next_run))
+    for job in sorted(schedule.get_jobs(), key=lambda job: job.next_run):
+        logging.info(
+            "Next run of {name}: {next_run}".format(name=job.job_func.keywords["name"], next_run=job.next_run)
+        )
 
     idle_sec = schedule.idle_seconds()
     if idle_sec is not None:
@@ -61,7 +65,7 @@ def set_schedule(timezone, schedule_data):
 
     for entry in schedule_data:
         args = (entry["func"],) + entry["args"]
-        schedule.every().day.at(entry["time"], timezone).do(schedule_task, *args)
+        schedule.every().day.at(entry["time"], timezone).do(schedule_task, *args, name=entry["name"])
 
 
 def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
@@ -140,6 +144,7 @@ if __name__ == "__main__":
     queue.put(
         [
             {
+                "name": "dummy",
                 "time": exec_time.strftime("%H:%M"),
                 "func": control,
                 "args": (aquarium.valve.TARGET.CO2, aquarium.valve.MODE.ON),
