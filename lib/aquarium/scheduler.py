@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 "func": control,
                 "args": (
                     aquarium.valve.TARGET.CO2,
-                    aquarium.valve.MODE[config["valve"]["air"]["mode"]["on"]],
+                    aquarium.valve.GPIO[config["valve"]["air"]["mode"]["on"]],
                 ),
             }
         ]

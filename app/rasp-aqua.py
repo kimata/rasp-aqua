@@ -52,7 +52,7 @@ def init_valve(config):
             config["valve"][target]["control"]["on"], config["valve"][target]["control"]["off"]
         )
         if judge[0]:
-            mode = aquarium.valve.MODE.ON
+            mode = aquarium.valve.GPIO[config["valve"][target]["mode"]["on"]]
 
             if judge[1] == 0:
                 reason = "now is between {start}-{end}".format(
@@ -69,7 +69,7 @@ def init_valve(config):
                 )
 
         else:
-            mode = aquarium.valve.MODE.OFF
+            mode = aquarium.valve.GPIO[config["valve"][target]["mode"]["off"]]
 
             if judge[1] == 0:
                 reason = "now is not between {start}-{end}".format(
@@ -103,7 +103,7 @@ def set_schedule(config, queue):
                     "func": aquarium.valve.control,
                     "args": (
                         aquarium.valve.TARGET[target.upper()],
-                        aquarium.valve.MODE[config["valve"][target]["mode"][mode]],
+                        aquarium.valve.GPIO[config["valve"][target]["mode"][mode]],
                     ),
                 }
             )

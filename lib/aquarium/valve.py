@@ -18,7 +18,7 @@ class TARGET(enum.Enum):
     AIR = 2
 
 
-class MODE(enum.Enum):
+class GPIO(enum.Enum):
     H = 1
     L = 0
 
@@ -87,22 +87,22 @@ def init(air=17, co2=27):
     GPIO.setup(gpio_air, GPIO.OUT)
     GPIO.setup(gpio_co2, GPIO.OUT)
 
-    control(TARGET.AIR, MODE.L)
-    control(TARGET.CO2, MODE.L)
+    control(TARGET.AIR, GPIO.L)
+    control(TARGET.CO2, GPIO.L)
 
 
-def control(target, mode):
+def control(target, level):
     global gpio_air
     global gpio_co2
 
-    logging.info("valve {target} = {mode}".format(target=target.name, mode=mode.name))
+    logging.info("valve {target} = {level}".format(target=target.name, level=level.name))
 
     if target == TARGET.CO2:
-        GPIO.output(gpio_co2, mode.value)
+        GPIO.output(gpio_co2, level.value)
     elif target == TARGET.AIR:
-        GPIO.output(gpio_air, mode.value)
+        GPIO.output(gpio_air, level.value)
     else:
-        logging.warning("Unknown mode: {mode}".format(mode=mode))
+        logging.warning("Unknown level: {level}".format(levele=level))
 
 
 if __name__ == "__main__":
@@ -119,5 +119,5 @@ if __name__ == "__main__":
 
     init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
-    control(TARGET.AIR, MODE[config["valve"]["air"]["mode"]["on"]])
-    control(TARGET.CO2, MODE[config["valve"]["co2"]["mode"]["on"]])
+    control(TARGET.AIR, GPIO[config["valve"]["air"]["mode"]["on"]])
+    control(TARGET.CO2, GPIO[config["valve"]["co2"]["mode"]["on"]])
