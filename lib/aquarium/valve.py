@@ -44,34 +44,35 @@ def is_rasberry_pi():
 
 
 if is_rasberry_pi():  # pragma: no cover
-    import RPi.GPIO as GPIO
+    import RPi.GPIO
 else:
     # NOTE: 本物の GPIO のように振る舞うダミーのライブラリ
-    class GPIO:
-        IS_DUMMY = True
-        BCM = 0
-        OUT = 0
-        state = {}
+    class RPi:
+        class GPIO:
+            IS_DUMMY = True
+            BCM = 0
+            OUT = 0
+            state = {}
 
-        def setmode(mode):
-            return
+            def setmode(mode):
+                return
 
-        def setup(gpio, direction):
-            return
+            def setup(gpio, direction):
+                return
 
-        def output(gpio, value):
-            logging.debug("output GPIO_{gpio} = {value}".format(gpio=gpio, value=value))
-            GPIO.state[gpio] = value
+            def output(gpio, value):
+                logging.debug("output GPIO_{gpio} = {value}".format(gpio=gpio, value=value))
+                RPi.GPIO.state[gpio] = value
 
-        def input(gpio):
-            if gpio in GPIO.state:
-                logging.debug("input GPIO_{gpio} = {value}".format(gpio=gpio, value=GPIO.state[gpio]))
-                return GPIO.state[gpio]
-            else:
-                return 0
+            def input(gpio):
+                if gpio in RPi.GPIO.state:
+                    logging.debug("input GPIO_{gpio} = {value}".format(gpio=gpio, value=RPi.GPIO.state[gpio]))
+                    return RPi.GPIO.state[gpio]
+                else:
+                    return 0
 
-        def setwarnings(warnings):
-            return
+            def setwarnings(warnings):
+                return
 
 
 def init(air=17, co2=27):
@@ -81,11 +82,11 @@ def init(air=17, co2=27):
     gpio_air = air
     gpio_co2 = co2
 
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BCM)
+    RPi.GPIO.setwarnings(False)
+    RPi.GPIO.setmode(RPi.GPIO.BCM)
 
-    GPIO.setup(gpio_air, GPIO.OUT)
-    GPIO.setup(gpio_co2, GPIO.OUT)
+    RPi.GPIO.setup(gpio_air, RPi.GPIO.OUT)
+    RPi.GPIO.setup(gpio_co2, RPi.GPIO.OUT)
 
     control(TARGET.AIR, GPIO.L)
     control(TARGET.CO2, GPIO.L)
@@ -98,9 +99,9 @@ def control(target, level):
     logging.info("valve {target} = {level}".format(target=target.name, level=level.name))
 
     if target == TARGET.CO2:
-        GPIO.output(gpio_co2, level.value)
+        RPi.GPIO.output(gpio_co2, level.value)
     elif target == TARGET.AIR:
-        GPIO.output(gpio_air, level.value)
+        RPi.GPIO.output(gpio_air, level.value)
     else:
         logging.warning("Unknown level: {level}".format(levele=level))
 
