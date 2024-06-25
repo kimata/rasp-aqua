@@ -19,8 +19,8 @@ class TARGET(enum.Enum):
 
 
 class MODE(enum.Enum):
-    ON = 1
-    OFF = 0
+    H = 1
+    L = 0
 
 
 gpio_air = None
@@ -87,8 +87,8 @@ def init(air=17, co2=27):
     GPIO.setup(gpio_air, GPIO.OUT)
     GPIO.setup(gpio_co2, GPIO.OUT)
 
-    control(TARGET.AIR, MODE.ON)
-    control(TARGET.CO2, MODE.OFF)
+    control(TARGET.AIR, MODE.L)
+    control(TARGET.CO2, MODE.L)
 
 
 def control(target, mode):
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     config = local_lib.config.load(args["-c"])
 
-    init()
+    init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
-    control(TARGET.AIR, MODE.ON)
-    control(TARGET.CO2, MODE.OFF)
+    control(TARGET.AIR, MODE[config["valve"]["air"]["mode"]["on"]])
+    control(TARGET.CO2, MODE[config["valve"]["co2"]["mode"]["on"]])

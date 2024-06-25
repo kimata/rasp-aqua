@@ -147,7 +147,10 @@ if __name__ == "__main__":
                 "name": "dummy",
                 "time": exec_time.strftime("%H:%M"),
                 "func": control,
-                "args": (aquarium.valve.TARGET.CO2, aquarium.valve.MODE.ON),
+                "args": (
+                    aquarium.valve.TARGET.CO2,
+                    aquarium.valve.MODE[config["valve"]["air"]["mode"]["on"]],
+                ),
             }
         ]
     )

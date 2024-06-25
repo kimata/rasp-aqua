@@ -101,7 +101,10 @@ def set_schedule(config, queue):
                     "name": "{target} {mode}".format(target=target, mode=mode),
                     "time": config["valve"][target]["control"][mode],
                     "func": aquarium.valve.control,
-                    "args": (aquarium.valve.TARGET[target.upper()], aquarium.valve.MODE[mode.upper()]),
+                    "args": (
+                        aquarium.valve.TARGET[target.upper()],
+                        aquarium.valve.MODE[config["valve"][target]["mode"][mode]],
+                    ),
                 }
             )
 
