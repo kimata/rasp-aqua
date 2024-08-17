@@ -9,8 +9,9 @@ Usage:
 Options:
   -c CONFIG     : CONFIG を設定ファイルとして読み込んで実行します．[default: config.yaml]
 """
-import logging
+
 import enum
+import logging
 
 
 class TARGET(enum.Enum):
@@ -32,7 +33,7 @@ def is_rasberry_pi():
         with open("/proc/cpuinfo", "r") as f:
             cpuinfo = f.read()
 
-        if "BCM" in cpuinfo:
+        if "Raspberry Pi" in cpuinfo:
             return True
         else:
             logging.warning(
