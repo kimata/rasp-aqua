@@ -12,8 +12,8 @@ build-image:
 
     script:
         - export GIT_SSL_NO_VERIFY=1
-        - git clone https://gitlab.green-rabbit.net/kimata/hems_config.git
-        - mv hems_config/rasp-shutter.yaml config.yaml
+        - git clone https://gitlab.green-rabbit.net/kimata/aqua_config.git
+        - mv aqua_config/rasp-aqua.yaml config.yaml
         - git config --global --add safe.directory ${PWD}
 
         - docker buildx create --name ${BUILDER} --config script/buildkitd.toml --use
