@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Liveness のチェックを行います
 
@@ -38,10 +37,9 @@ def check_liveness(config):
 
 ######################################################################
 if __name__ == "__main__":
-    from docopt import docopt
-
-    import local_lib.logger
     import local_lib.config
+    import local_lib.logger
+    from docopt import docopt
 
     args = docopt(__doc__)
 

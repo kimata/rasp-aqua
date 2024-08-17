@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 関数を指定時刻に呼び出します．
 
@@ -14,34 +13,33 @@ import logging
 import pathlib
 import threading
 import time
-import datetime
 import traceback
-import schedule
-from multiprocessing.pool import ThreadPool
 
-schedule_lock = None
+import schedule
+
+worker = None
 should_terminate = False
 executed_job = False
 
 
-def init(timezone, queue, liveness_file):
-    global schedule_lock
-    schedule_lock = threading.Lock()
+def init(timezone, queue, liveness_file, check_interval_sec):
+    global worker  # noqa: PLW0603
 
-    pool = ThreadPool(processes=1)
+    worker = threading.Thread(
+        target=schedule_worker,
+        args=(timezone, queue, liveness_file, check_interval_sec),
+    )
 
-    return pool.apply_async(schedule_worker, (timezone, queue, liveness_file))
+    worker.start()
 
 
 def schedule_task(*args, **kwargs):
-    global executed_job
+    global executed_job  # noqa: PLW0603
 
     func = args[0]
 
     logging.info(
-        "Execute {name} ({file}:{func})".format(
-            name=kwargs["name"], file=pathlib.Path(func.__code__.co_filename).name, func=func.__name__
-        )
+        "Execute %s (%s:%s)", kwargs["name"], pathlib.Path(func.__code__.co_filename).name, func.__name__
     )
 
     func(*args[1:])
@@ -51,13 +49,11 @@ def schedule_task(*args, **kwargs):
 
 def schedule_status():
     for job in sorted(schedule.get_jobs(), key=lambda job: job.next_run):
-        logging.info(
-            "Next run of {name}: {next_run}".format(name=job.job_func.keywords["name"], next_run=job.next_run)
-        )
+        logging.info("Next run of %s: %s", job.job_func.keywords["name"], job.next_run)
 
     idle_sec = schedule.idle_seconds()
     if idle_sec is not None:
-        logging.info("Time to next jobs is {time}".format(time=datetime.timedelta(seconds=int(idle_sec))))
+        logging.info("Time to next jobs is %.1f sec", idle_sec)
 
 
 def set_schedule(timezone, schedule_data):
@@ -68,9 +64,9 @@ def set_schedule(timezone, schedule_data):
         schedule.every().day.at(entry["time"], timezone).do(schedule_task, *args, name=entry["name"])
 
 
-def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
+def schedule_worker(timezone, queue, liveness_path, check_interval_sec):
     global should_terminate
-    global executed_job
+    global executed_job  # noqa: PLW0603
 
     liveness_file = pathlib.Path(liveness_path)
     liveness_file.parent.mkdir(parents=True, exist_ok=True)
@@ -95,12 +91,11 @@ def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
                 executed_job = False
 
             sleep_sec = max(check_interval_sec - (time.time() - time_start), 1)
-            logging.debug("Sleep {sleep_sec:.1f} sec...".format(sleep_sec=sleep_sec))
+            logging.debug("Sleep %.1f sec...", sleep_sec)
             time.sleep(sleep_sec)
         except OverflowError:  # pragma: no cover
             # NOTE: テストする際，freezer 使って日付をいじるとこの例外が発生する
             logging.debug(traceback.format_exc())
-            pass
 
         # NOTE: 10秒以上経過していたら，liveness を更新する
         if (check_interval_sec >= 10) or (i % (10 / check_interval_sec) == 0):
@@ -108,52 +103,3 @@ def schedule_worker(timezone, queue, liveness_path, check_interval_sec=10):
         i += 1
 
     logging.info("Terminate schedule worker")
-
-
-if __name__ == "__main__":
-    from docopt import docopt
-    from multiprocessing import Queue
-    import pytz
-
-    import local_lib.logger
-    import local_lib.config
-    import aquarium.valve
-
-    args = docopt(__doc__)
-
-    local_lib.logger.init("test", level=logging.DEBUG)
-
-    config = local_lib.config.load(args["-c"])
-
-    aquarium.valve.init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
-
-    timezone = pytz.timezone("Asia/Tokyo")
-    queue = Queue()
-
-    result = init(timezone, queue, config["liveness"]["file"]["scheduler"])
-
-    now = datetime.datetime.now(timezone)
-    exec_time = now + datetime.timedelta(minutes=2 if now.second > 45 else 1)
-
-    def control(target, mode):
-        global should_terminate
-
-        aquarium.valve.control(target, mode)
-        should_terminate = True
-
-    queue.put(
-        [
-            {
-                "name": "dummy",
-                "time": exec_time.strftime("%H:%M"),
-                "func": control,
-                "args": (
-                    aquarium.valve.TARGET.CO2,
-                    aquarium.valve.GPIO[config["valve"]["air"]["mode"]["on"]],
-                ),
-            }
-        ]
-    )
-
-    # NOTE: 終了するのを待つ
-    result.get()

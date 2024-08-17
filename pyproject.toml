@@ -17,7 +17,7 @@ dependencies = [
     # NOTE: 1.2.2 で入ったタイムゾーン周りの修正が悪さをするので，一旦 1.2.1 に固定する．
     # 1.2.2 移行にする場合，おそらくテストコードも修正必要．
     "schedule>=1.2.2",
-    "my-lib @ git+https://github.com/kimata/my-py-lib@1b16645cfb290be95a2cc09028d1091339d5386d",
+    "my-lib @ git+https://github.com/kimata/my-py-lib@8503f3bcdecd6e32c7388d519c0f5cadf6a7ca8c",
 ]
 
 [build-system]
@@ -46,9 +46,9 @@ dev-dependencies = [
 [tool.pytest.ini_options]
 minversion = "6.0"
 
-# addopts = "--verbose --log-cli-level=DEBUG --log-file-level=DEBUG --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys  --html=tests/evidence/index.htm --self-contained-html --cov=flask --cov-report=html"
+# addopts = "--verbose --log-cli-level=DEBUG --log-file-level=DEBUG --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys  --html=tests/evidence/index.htm --self-contained-html --cov=src --cov-report=html"
 
-addopts = "--verbose --log-file-level=DEBUG --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys  --html=tests/evidence/index.htm --self-contained-html --cov=flask --cov-report=html"
+addopts = "--verbose --log-file-level=DEBUG --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys  --html=tests/evidence/index.htm --self-contained-html --cov=src --cov-report=html"
 
 testpaths = [
     "tests",
