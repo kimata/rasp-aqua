@@ -16,6 +16,10 @@
             "matchPaths": [".gitlab-ci.yml"],
             "matchPackagePatterns": ["local_playwright"],
             "enabled": false
+        },
+        {
+            "matchPackageNames": ["schedule"],
+            "allowedVersions": "1.2.1"
         }
     ]
 }

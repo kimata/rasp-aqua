@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 水槽の自動管理を行います．
 
 Usage:
-  rasp-aqua.py [-c CONFIG]
+  rasp-aqua.py [-c CONFIG] [-d]
 
 Options:
   -c CONFIG     : CONFIG を設定ファイルとして読み込んで実行します．[default: config.yaml]
+  -d                : デバッグモードで動作します．
 """
 
 import datetime
+import logging
 from multiprocessing import Queue
 from multiprocessing.pool import ThreadPool
+
 import pytz
-import logging
 
-
-import aquarium.valve
-import aquarium.scheduler
-
+import rasp_aqua.scheduler
+import rasp_aqua.valve
 
 NAME = "rasp-aqua"
 VERSION = "0.1.0"
@@ -52,7 +51,7 @@ def init_valve(config):
             config["valve"][target]["control"]["on"], config["valve"][target]["control"]["off"]
         )
         if judge[0]:
-            mode = aquarium.valve.GPIO[config["valve"][target]["mode"]["on"]]
+            mode = rasp_aqua.valve.GPIO[config["valve"][target]["mode"]["on"]]
 
             if judge[1] == 0:
                 reason = "now is between {start}-{end}".format(
@@ -69,7 +68,7 @@ def init_valve(config):
                 )
 
         else:
-            mode = aquarium.valve.GPIO[config["valve"][target]["mode"]["off"]]
+            mode = rasp_aqua.valve.GPIO[config["valve"][target]["mode"]["off"]]
 
             if judge[1] == 0:
                 reason = "now is not between {start}-{end}".format(
@@ -89,7 +88,7 @@ def init_valve(config):
                 reason=reason,
             )
         )
-        aquarium.valve.control(aquarium.valve.TARGET[target.upper()], mode)
+        rasp_aqua.valve.control(rasp_aqua.valve.TARGET[target.upper()], mode)
 
 
 def set_schedule(config, queue):
@@ -100,10 +99,10 @@ def set_schedule(config, queue):
                 {
                     "name": "{target} {mode}".format(target=target, mode=mode),
                     "time": config["valve"][target]["control"][mode],
-                    "func": aquarium.valve.control,
+                    "func": rasp_aqua.valve.control,
                     "args": (
-                        aquarium.valve.TARGET[target.upper()],
-                        aquarium.valve.GPIO[config["valve"][target]["mode"][mode]],
+                        rasp_aqua.valve.TARGET[target.upper()],
+                        rasp_aqua.valve.GPIO[config["valve"][target]["mode"][mode]],
                     ),
                 }
             )
@@ -112,13 +111,13 @@ def set_schedule(config, queue):
 
 
 def execute(config):
-    aquarium.valve.init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
+    rasp_aqua.valve.init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
     timezone = pytz.timezone("Asia/Tokyo")
     queue = Queue()
     pool = ThreadPool(processes=1)
 
-    result = aquarium.scheduler.init(timezone, queue, config["liveness"]["file"]["scheduler"])
+    result = rasp_aqua.scheduler.init(timezone, queue, config["liveness"]["file"]["scheduler"])
 
     init_valve(config)
     set_schedule(config, queue)
@@ -128,16 +127,17 @@ def execute(config):
 
 ######################################################################
 if __name__ == "__main__":
-    from docopt import docopt
+    import docopt
+    import my_lib.config
+    import my_lib.logger
 
-    import local_lib.logger
-    import local_lib.config
-
-    args = docopt(__doc__)
-
-    local_lib.logger.init("hems.rasp-aqua", level=logging.INFO)
+    args = docopt.docopt(__doc__)
 
     config_file = args["-c"]
-    config = local_lib.config.load(args["-c"])
+    debug_mode = args["-d"]
+
+    my_lib.logger.init("hems.rasp-water", level=logging.DEBUG if debug_mode else logging.INFO)
+
+    config = my_lib.config.load(config_file)
 
     execute(config)

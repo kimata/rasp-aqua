@@ -1,39 +1,53 @@
-[tool.poetry]
+[project]
 name = "rasp-aqua"
 version = "0.1.0"
 description = "水槽を Raspberry Pi でモニターしつつ管理するスクリプトです．"
-authors = ["KIMATA Tetsuya <kimata@green-rabbit.net>"]
+authors = [
+    { name = "KIMATA Tetsuya", email = "kimata@green-rabbit.net" }
+]
+readme = "README.md"
+requires-python = ">= 3.10"
 
-packages = [
-    { include = "local_lib", from = "lib" },
-    { include = "aquarium", from = "lib" }
+dependencies = [
+    "pyyaml>=6.0.1",
+    "coloredlogs>=15.0.1",
+    "pytz>=2024.1",
+    "docopt-ng>=0.9.0",
+    # NOTE: 1.2.2 で入ったタイムゾーン周りの修正が悪さをするので，一旦 1.2.1 に固定する．
+    # 1.2.2 移行にする場合，おそらくテストコードも修正必要．
+    "schedule>=1.2.2",
+    "my-lib @ git+https://github.com/kimata/my-py-lib@2f168e77c410ae3b39b265428b3a9b51651f1b1e",
 ]
 
-[tool.poetry.dependencies]
-coloredlogs = "^15.0.1"
-docopt = "^0.6.2"
-python = "^3.10"
-pyyaml = "^6.0.1"
-# NOTE: 1.2.2 で入ったタイムゾーン周りのバグ修正が悪さをするので，一旦 1.2.1 に固定する．
-# 1.2.2 移行にする場合，おそらくテストコードも修正必要．
-schedule = "1.2.1"
-pytz = "^2024.1"
-rpi-lgpio = "^0.6"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.group.test.dependencies]
-flaky = "^3.7.0"
-playwright = "^1.36.0"
-pytest-cov = "^4.1.0"
-pytest-freezegun = "^0.4.2"
-pytest-html = "^4.0.0"
-pytest-mock = "^3.11.1"
-pytest-playwright = "^0.4.0"
-pytest-xdist = "^3.3.1"
+[tool.hatch.build.targets.wheel]
+packages = ["src/rasp_aqua"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "flaky>=3.8.1",
+    "playwright>=1.45.1",
+    "pytest-cov>=5.0.0",
+    "pytest-freezegun>=0.4.2",
+    "pytest-html>=4.1.1",
+    "pytest-mock>=3.14.0",
+    "pytest-playwright>=0.5.1",
+    "pytest-xdist>=3.6.1",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 
-addopts = "--verbose --cov=app --cov=lib --log-file-level=INFO --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys --cov-report=html --html=tests/evidence/index.htm --self-contained-html"
+# addopts = "--verbose --log-cli-level=DEBUG --log-file-level=DEBUG --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys  --html=tests/evidence/index.htm --self-contained-html --cov=flask --cov-report=html"
+
+addopts = "--verbose --log-file-level=DEBUG --log-format=\"%(asctime)s %(levelname)s %(message)s\" --log-format=\"%(asctime)s %(levelname)s [%(filename)s:%(lineno)s %(funcName)s] %(message)s\" --capture=sys  --html=tests/evidence/index.htm --self-contained-html --cov=flask --cov-report=html"
 
 testpaths = [
     "tests",
@@ -53,52 +67,7 @@ exclude_lines = [
   "if __name__ == .__main__.:",
 
   # 以下，未使用関数
-
-  # config.py
-  "def get_db_config",
-
-  # logger.py
-  "class GZipRotator",
-  "def log_formatter",
-  "if log_dir_path is not None:",
-  "if log_queue is not None:",
-  "if is_str_log:",
-
-  # sensor_data.py
-  "def get_equip_on_minutes",
-  "def get_equip_mode_period",
-  "def get_day_sum",
-  "def dump_data",
-
-  # notify_slack.py
-  "def info",
-
-  # flask_util.py
-  "def remote_host",
-  "def auth_user",
-
-  # selenium_util.py
-  "def is_display",
-  "def random_sleep",
-  "def wait_patiently",
-  "def dump_page",
-  "def clean_dump",
-  "def get_memory_info",
-  "def log_memory_usage",
 ]
 
 [tool.coverage.html]
 directory = "tests/evidence/coverage"
-
-[tool.black]
-target-version = ['py310']
-line-length = 110
-
-[tool.isort]
-profile = "black"
-line_length = 110
-include_trailing_comma = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"

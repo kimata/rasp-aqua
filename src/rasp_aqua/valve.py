@@ -108,10 +108,9 @@ def control(target, level):
 
 
 if __name__ == "__main__":
-    from docopt import docopt
-
-    import local_lib.logger
     import local_lib.config
+    import local_lib.logger
+    from docopt import docopt
 
     args = docopt(__doc__)
 

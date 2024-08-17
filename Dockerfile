@@ -1,32 +1,40 @@
-FROM python:3.10.13-bookworm as build
+FROM python:3.12.5-bookworm AS build
 
-RUN apt-get update && apt-get install --assume-yes \
+RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install --no-install-recommends --assume-yes \
     gcc \
     curl \
     python3 \
-    python3-dev \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+    python3-dev
 
-WORKDIR /opt/rasp-aqua
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH=/root/.rye/shims/:$PATH
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
+RUN curl -sSf https://rye.astral.sh/get | RYE_NO_AUTO_INSTALL=1 RYE_INSTALL_OPTION="--yes" bash
 
-COPY . .
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=.python-version,target=.python-version \
+    --mount=type=bind,source=README.md,target=README.md \
+    rye lock
 
-RUN poetry config virtualenvs.create false \
- && poetry install \
- && rm -rf ~/.cache
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=README.md,target=README.md \
+    --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.lock
 
-FROM python:3.10.13-bookworm as prod
+
+FROM python:3.12.5-slim-bookworm AS prod
+
+ARG IMAGE_BUILD_DATE
 
 ENV TZ=Asia/Tokyo
+ENV IMAGE_BUILD_DATE=${IMAGE_BUILD_DATE}
 
-COPY --from=build /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
 WORKDIR /opt/rasp-aqua
 
 COPY . .
 
-CMD ["./app/rasp-aqua.py"]
+CMD ["./src/app.py"]
