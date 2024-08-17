@@ -17,6 +17,7 @@ dependencies = [
     # 1.2.2 移行にする場合，おそらくテストコードも修正必要．
     "schedule>=1.2.2",
     "my-lib @ git+https://github.com/kimata/my-py-lib@2f168e77c410ae3b39b265428b3a9b51651f1b1e",
+    "rpi-lgpio>=0.6",
 ]
 
 [build-system]
