@@ -9,16 +9,16 @@ readme = "README.md"
 requires-python = ">= 3.10"
 
 dependencies = [
-    "pyyaml>=6.0.1",
     "coloredlogs>=15.0.1",
-    "pytz>=2024.1",
     "docopt-ng>=0.9.0",
+    "pytz>=2024.1",
+    "pyyaml>=6.0.1",
+    "rpi-lgpio>=0.6",
     # NOTE: 1.2.2 で入ったタイムゾーン周りの修正が悪さをするので，一旦 1.2.1 に固定する．
     # 1.2.2 移行にする場合，おそらくテストコードも修正必要．
     "schedule>=1.2.2",
     "my-lib @ git+https://github.com/kimata/my-py-lib@2f168e77c410ae3b39b265428b3a9b51651f1b1e",
-    "rpi-lgpio>=0.6",
-]
+ ]
 
 [build-system]
 requires = ["hatchling"]
