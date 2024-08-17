@@ -13,67 +13,16 @@ Options:
 import enum
 import logging
 
+import my_lib.rpi
+
 
 class TARGET(enum.Enum):
     CO2 = 1
     AIR = 2
 
 
-class GPIO(enum.Enum):
-    H = 1
-    L = 0
-
-
 gpio_air = None
 gpio_co2 = None
-
-
-def is_rasberry_pi():
-    try:
-        with open("/proc/cpuinfo", "r") as f:
-            cpuinfo = f.read()
-
-        if "Raspberry Pi" in cpuinfo:
-            return True
-        else:
-            logging.warning(
-                "Since it is not running on a Raspberry Pi, the GPIO library is replaced with dummy functions."
-            )
-            return False
-    except Exception as e:
-        return False
-
-
-if is_rasberry_pi():  # pragma: no cover
-    import RPi.GPIO
-else:
-    # NOTE: 本物の GPIO のように振る舞うダミーのライブラリ
-    class RPi:
-        class GPIO:
-            IS_DUMMY = True
-            BCM = 0
-            OUT = 0
-            state = {}
-
-            def setmode(mode):
-                return
-
-            def setup(gpio, direction):
-                return
-
-            def output(gpio, value):
-                logging.debug("output GPIO_{gpio} = {value}".format(gpio=gpio, value=value))
-                RPi.GPIO.state[gpio] = value
-
-            def input(gpio):
-                if gpio in RPi.GPIO.state:
-                    logging.debug("input GPIO_{gpio} = {value}".format(gpio=gpio, value=RPi.GPIO.state[gpio]))
-                    return RPi.GPIO.state[gpio]
-                else:
-                    return 0
-
-            def setwarnings(warnings):
-                return
 
 
 def init(air=17, co2=27):
@@ -83,14 +32,14 @@ def init(air=17, co2=27):
     gpio_air = air
     gpio_co2 = co2
 
-    RPi.GPIO.setwarnings(False)
-    RPi.GPIO.setmode(RPi.GPIO.BCM)
+    my_lib.rpi.gpio.setwarnings(False)
+    my_lib.rpi.gpio.setmode(my_lib.rpi.gpio.BCM)
 
-    RPi.GPIO.setup(gpio_air, RPi.GPIO.OUT)
-    RPi.GPIO.setup(gpio_co2, RPi.GPIO.OUT)
+    my_lib.rpi.gpio.setup(gpio_air, my_lib.rpi.gpio.OUT)
+    my_lib.rpi.gpio.setup(gpio_co2, my_lib.rpi.gpio.OUT)
 
-    control(TARGET.AIR, GPIO.L)
-    control(TARGET.CO2, GPIO.L)
+    control(TARGET.AIR, my_lib.rpi.gpio.LOW)
+    control(TARGET.CO2, my_lib.rpi.gpio.LOW)
 
 
 def control(target, level):
@@ -100,9 +49,9 @@ def control(target, level):
     logging.info("valve {target} = {level}".format(target=target.name, level=level.name))
 
     if target == TARGET.CO2:
-        RPi.GPIO.output(gpio_co2, level.value)
+        my_lib.rpi.gpio.output(gpio_co2, level.value)
     elif target == TARGET.AIR:
-        RPi.GPIO.output(gpio_air, level.value)
+        my_lib.rpi.gpio.output(gpio_air, level.value)
     else:
         logging.warning("Unknown level: {level}".format(levele=level))
 
@@ -120,5 +69,5 @@ if __name__ == "__main__":
 
     init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
-    control(TARGET.AIR, GPIO[config["valve"]["air"]["mode"]["on"]])
-    control(TARGET.CO2, GPIO[config["valve"]["co2"]["mode"]["on"]])
+    control(TARGET.AIR, my_lib.rpi.gpio.level[config["valve"]["air"]["mode"]["on"]])
+    control(TARGET.CO2, my_lib.rpi.gpio.level[config["valve"]["co2"]["mode"]["on"]])
