@@ -45,11 +45,11 @@ def control(target, level):
     global gpio_air
     global gpio_co2
 
-    logging.info("valve %s = %s", target.name, level.name)
+    logging.info("valve %s = %s", target.name, level.value)
 
     if target == TARGET.CO2:
         my_lib.rpi.gpio.output(gpio_co2, level.value)
     elif target == TARGET.AIR:
         my_lib.rpi.gpio.output(gpio_air, level.value)
     else:
-        logging.warning("Unknown level: %s", level)
+        logging.warning("Unknown taeget: %s", target)

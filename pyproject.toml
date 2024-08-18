@@ -14,10 +14,8 @@ dependencies = [
     "pytz>=2024.1",
     "pyyaml>=6.0.1",
     "rpi-lgpio>=0.6",
-    # NOTE: 1.2.2 で入ったタイムゾーン周りの修正が悪さをするので，一旦 1.2.1 に固定する．
-    # 1.2.2 移行にする場合，おそらくテストコードも修正必要．
     "schedule>=1.2.2",
-    "my-lib @ git+https://github.com/kimata/my-py-lib@8503f3bcdecd6e32c7388d519c0f5cadf6a7ca8c",
+    "my-lib @ git+https://github.com/kimata/my-py-lib@c536eb14220cb90e0baa3c154fa4fe7050fbb8e7",
 ]
 
 [build-system]
@@ -36,11 +34,11 @@ dev-dependencies = [
     "flaky>=3.8.1",
     "playwright>=1.45.1",
     "pytest-cov>=5.0.0",
-    "pytest-freezegun>=0.4.2",
     "pytest-html>=4.1.1",
     "pytest-mock>=3.14.0",
     "pytest-playwright>=0.5.1",
     "pytest-xdist>=3.6.1",
+    "time-machine>=2.15.0",
 ]
 
 [tool.pytest.ini_options]
@@ -56,7 +54,6 @@ testpaths = [
 filterwarnings = [
     "ignore:The hookimpl CovPlugin.pytest_configure_node uses",
     "ignore:The hookimpl CovPlugin.pytest_testnodedown uses",
-    "ignore::DeprecationWarning:pytest_freezegun",
 ]
 
 [tool.coverage.run]

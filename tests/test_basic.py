@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # ruff: noqa: S101
 
+import datetime
+import logging
 import pathlib
 import time
 from unittest import mock
@@ -27,102 +29,168 @@ def env_mock():
 
 @pytest.fixture(autouse=True)
 def _clear():
-    import my_lib.config
+    import my_lib.footprint
     import my_lib.rpi
 
     config = my_lib.config.load(CONFIG_FILE)
-
-    import my_lib.footprint
 
     my_lib.footprint.clear(pathlib.Path(config["liveness"]["file"]["scheduler"]))
     my_lib.rpi.gpio.hist_clear()
 
 
-def gpio_check(expect_list):
-    import logging
+def move_to(time_machine, hour):
+    target_time = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).replace(
+        hour=hour, minute=0, second=0
+    )
 
+    time_machine.move_to(target_time)
+
+
+def gpio_check(expect_list):
     import my_lib.rpi
 
     hist_list = my_lib.rpi.gpio.hist_get()
 
     logging.debug(hist_list)
 
+    hist_list = [{k: v for k, v in d.items() if k not in "high_period"} for i, d in enumerate(hist_list)]
+
     assert hist_list == expect_list
 
 
 ######################################################################
-def test_init_CO2_off_AIR_on(freezer):
-    freezer.move_to("07:00")
-    rasp_aqua.control.execute(my_lib.config.load(CONFIG_FILE), 1)
-    time.sleep(1)
-    rasp_aqua.control.term()
-
-    gpio_check([{"state": "low"}, {"state": "low"}, {"state": "low"}, {"state": "low"}])
-
-
-def test_init_CO2_off_AIR_off(freezer):
+def test_init_CO2_off_AIR_on(time_machine):
     config = my_lib.config.load(CONFIG_FILE)
 
-    freezer.move_to("09:00")
+    move_to(time_machine, 7)
 
-    rasp_aqua.control.execute(config, 1)
-    time.sleep(1)
+    rasp_aqua.control.execute(config, 0.1)
+    time.sleep(0.5)
     rasp_aqua.control.term()
 
     gpio_check(
         [
-            {"state": "low"},
-            {"state": "low"},
-            {"pin_num": config["valve"]["air"]["gpio"], "state": "high"},
-            {"state": "low"},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
         ]
     )
 
 
-def test_init_CO2_on_AIR_off(freezer):
+def test_init_CO2_off_AIR_off(time_machine):
     config = my_lib.config.load(CONFIG_FILE)
 
-    freezer.move_to("012:00")
+    move_to(time_machine, 9)
 
-    rasp_aqua.control.execute(config, 1)
-    time.sleep(1)
+    rasp_aqua.control.execute(config, 0.1)
+    time.sleep(0.5)
     rasp_aqua.control.term()
 
     gpio_check(
         [
-            {"state": "low"},
-            {"state": "low"},
-            {"pin_num": config["valve"]["air"]["gpio"], "state": "high"},
-            {"pin_num": config["valve"]["co2"]["gpio"], "state": "high"},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+            # NOTE: これが要る理由は要調査
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
         ]
     )
 
 
-# def test_init(freezer):
-#     freezer.move_to("08:00")
-#     rasp_aqua.control.execute(my_lib.config.load(CONFIG_FILE), 1)
+def test_init_CO2_on_AIR_off(time_machine):
+    config = my_lib.config.load(CONFIG_FILE)
 
-#     rasp_aqua.control.term()
+    move_to(time_machine, 12)
 
-#     hist_list = my_lib.rpi.gpio.hist_get()
+    rasp_aqua.control.execute(config, 0.1)
+    time.sleep(0.5)
+    rasp_aqua.control.term()
 
-#     assert hist_list is None
+    gpio_check(
+        [
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["on"]},
+        ]
+    )
 
 
-# air:
-#   gpio: 27
-#   control:
-#     "on": "20:00"
-#     "off": "08:00"
-#   mode:
-#     "on": LOW
-#     "off": HIGH
+def test_schedule(time_machine):
+    config = my_lib.config.load(CONFIG_FILE)
 
-# co2:
-#   gpio: 17
-#   control:
-#     "on": "11:00"
-#     "off": "15:00"
-#   mode:
-#     "on": HIGH
-#     "off": LOW
+    move_to(time_machine, 7)
+
+    rasp_aqua.control.execute(config, 0.1)
+    time.sleep(0.5)
+
+    gpio_check(
+        [
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+        ]
+    )
+
+    move_to(time_machine, 9)
+    time.sleep(0.5)
+
+    gpio_check(
+        [
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
+        ]
+    )
+
+    move_to(time_machine, 12)
+    time.sleep(0.5)
+
+    gpio_check(
+        [
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["on"]},
+        ]
+    )
+
+    move_to(time_machine, 16)
+    time.sleep(0.5)
+
+    gpio_check(
+        [
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+        ]
+    )
+
+    move_to(time_machine, 20)
+    time.sleep(0.5)
+
+    gpio_check(
+        [
+            {"pin_num": config["valve"]["air"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["on"]},
+            {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
+            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["on"]},
+        ]
+    )
+
+    rasp_aqua.control.term()

@@ -11,7 +11,7 @@ import rasp_aqua.valve
 
 
 def check_time_in_range(start, end):
-    time_curr = datetime.datetime.now().time()
+    time_curr = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).time()
 
     time_start = datetime.datetime.strptime(start, "%H:%M").time()
     time_end = datetime.datetime.strptime(end, "%H:%M").time()
@@ -32,12 +32,17 @@ def check_time_in_range(start, end):
 
 # NOTE: 現在時刻に基づいてバルブの状態を設定する
 def init_valve(config):
+    logging.info(
+        "Now is %s",
+        datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
+    )
+
     for target in ["air", "co2"]:
         judge = check_time_in_range(
             config["valve"][target]["control"]["on"], config["valve"][target]["control"]["off"]
         )
         if judge[0]:
-            mode = my_lib.rpi.gpio.level[config["valve"][target]["mode"]["on"]]
+            mode = "on"
 
             if judge[1] == 0:
                 reason = "now is between {start}-{end}".format(
@@ -54,7 +59,7 @@ def init_valve(config):
                 )
 
         else:
-            mode = my_lib.rpi.gpio.level[config["valve"][target]["mode"]["off"]]
+            mode = "off"
 
             if judge[1] == 0:
                 reason = "now is not between {start}-{end}".format(
@@ -70,11 +75,14 @@ def init_valve(config):
         logging.info(
             "initialize {target} {mode}, because {reason}".format(
                 target=target,
-                mode=mode.name,
+                mode=mode.upper(),
                 reason=reason,
             )
         )
-        rasp_aqua.valve.control(rasp_aqua.valve.TARGET[target.upper()], mode)
+        rasp_aqua.valve.control(
+            rasp_aqua.valve.TARGET[target.upper()],
+            my_lib.rpi.gpio.level[config["valve"][target]["mode"][mode]],
+        )
 
 
 def set_schedule(config, queue):
@@ -88,7 +96,7 @@ def set_schedule(config, queue):
                     "func": rasp_aqua.valve.control,
                     "args": (
                         rasp_aqua.valve.TARGET[target.upper()],
-                        config["valve"][target]["mode"][mode],
+                        my_lib.rpi.gpio.level[config["valve"][target]["mode"][mode]],
                     ),
                 }
             )
@@ -112,6 +120,8 @@ def term():
     if rasp_aqua.scheduler.worker is None:
         return
 
-    rasp_aqua.scheduler.should_terminate = True
+    rasp_aqua.scheduler.should_terminate.set()
     rasp_aqua.scheduler.worker.join()
     rasp_aqua.scheduler.worker = None
+
+    rasp_aqua.scheduler.should_terminate.clear()
