@@ -4,6 +4,7 @@ stages:
     - build-image
     - pre-test
     - test
+    - deploy
     - renovate
 
 build-image:
