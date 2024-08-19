@@ -31,7 +31,7 @@ test-prepare:
     stage: pre-test
 
     script:
-        - CC=gcc rye sync
+        - rye sync
 
     artifacts:
         paths:
