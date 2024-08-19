@@ -74,8 +74,8 @@ deploy:
         entrypoint: [""]
     script:
         - kubectl config get-contexts
-        - kubectl config use-context kimata/rasp-shutter:pod-rollout
-        - kubectl --insecure-skip-tls-verify=true rollout restart -n hems deployment rasp-shutter
+        - kubectl config use-context kimata/rasp-aqua:pod-rollout
+        - kubectl --insecure-skip-tls-verify=true rollout restart -n hems deployment rasp-aqua
     rules:
         # NOTE: 自動実行ではデプロイしない
         - if: '$CI_PIPELINE_SOURCE == "schedule"'
