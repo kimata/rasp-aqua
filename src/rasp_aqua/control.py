@@ -125,3 +125,5 @@ def term():
     rasp_aqua.scheduler.worker = None
 
     rasp_aqua.scheduler.should_terminate.clear()
+
+    my_lib.rpi.gpio.cleanup()
