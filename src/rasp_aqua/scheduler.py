@@ -61,9 +61,6 @@ def schedule_status():
         hours, remainder = divmod(idle_sec, 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        logging.info(schedule.idle_seconds())
-        logging.info((schedule.next_run() - datetime.datetime.now()).total_seconds())
-
         logging.info(
             "Now is %s, time to next jobs is %d hour(s) %d minute(s) %d second(s)",
             datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).strftime(
@@ -95,6 +92,7 @@ def schedule_worker(queue, timezone, liveness_path, check_interval_sec):
     i = 0
     while True:
         if should_terminate.is_set():
+            schedule.clear()
             break
         try:
             time_start = time.time()

@@ -93,8 +93,6 @@ def test_init_CO2_off_AIR_off(time_machine):
             {"pin_num": config["valve"]["co2"]["gpio"], "state": my_lib.rpi.gpio.level.LOW.name},
             {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
             {"pin_num": config["valve"]["co2"]["gpio"], "state": config["valve"]["co2"]["mode"]["off"]},
-            # NOTE: これが要る理由は要調査
-            {"pin_num": config["valve"]["air"]["gpio"], "state": config["valve"]["air"]["mode"]["off"]},
         ]
     )
 
