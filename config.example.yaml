@@ -1,3 +1,7 @@
+timezone:
+  offset: 9
+  zone: Asia/Tokyo
+
 valve:
   air:
     gpio: 27

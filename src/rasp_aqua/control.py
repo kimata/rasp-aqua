@@ -5,13 +5,14 @@ import logging
 from multiprocessing import Queue
 
 import my_lib.rpi
-import pytz
 import rasp_aqua.scheduler
 import rasp_aqua.valve
 
 
 def check_time_in_range(start, end):
-    time_curr = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).time()
+    time_curr = datetime.datetime.now(
+        tz=datetime.timezone(datetime.timedelta(hours=rasp_aqua.scheduler.timezone["offset"]))
+    ).time()
 
     time_start = datetime.datetime.strptime(start, "%H:%M").time()
     time_end = datetime.datetime.strptime(end, "%H:%M").time()
@@ -34,7 +35,9 @@ def check_time_in_range(start, end):
 def init_valve(config):
     logging.info(
         "Now is %s",
-        datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
+        datetime.datetime.now(
+            tz=datetime.timezone(datetime.timedelta(hours=rasp_aqua.scheduler.timezone["offset"]))
+        ).strftime("%Y-%m-%d %H:%M"),
     )
 
     for target in ["air", "co2"]:
@@ -107,10 +110,11 @@ def set_schedule(config, queue):
 def execute(config, check_interval_sec=10):
     rasp_aqua.valve.init(config["valve"]["air"]["gpio"], config["valve"]["co2"]["gpio"])
 
-    timezone = pytz.timezone("Asia/Tokyo")
     queue = Queue()
 
-    rasp_aqua.scheduler.init(timezone, queue, config["liveness"]["file"]["scheduler"], check_interval_sec)
+    rasp_aqua.scheduler.init(
+        config["timezone"], queue, config["liveness"]["file"]["scheduler"], check_interval_sec
+    )
 
     init_valve(config)
     set_schedule(config, queue)

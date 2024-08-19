@@ -16,19 +16,25 @@ import threading
 import time
 import traceback
 
+import pytz
 import schedule
 
 worker = None
 should_terminate = threading.Event()
 executed_job = False
 
+timezone = None
 
-def init(timezone, queue, liveness_file, check_interval_sec):
+
+def init(timezone_, queue, liveness_file, check_interval_sec):
     global worker  # noqa: PLW0603
+    global timezone  # noqa: PLW0603
+
+    timezone = timezone_
 
     worker = threading.Thread(
         target=schedule_worker,
-        args=(queue, timezone, liveness_file, check_interval_sec),
+        args=(queue, liveness_file, check_interval_sec),
     )
 
     worker.start()
@@ -36,12 +42,15 @@ def init(timezone, queue, liveness_file, check_interval_sec):
 
 def schedule_task(*args, **kwargs):
     global executed_job  # noqa: PLW0603
+    global timezone  # noqa: PLW0603
 
     func = args[0]
 
     logging.info(
         "Now is %s",
-        datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
+        datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=timezone["offset"]))).strftime(
+            "%Y-%m-%d %H:%M"
+        ),
     )
     logging.info(
         "Execute %s (%s:%s)", kwargs["name"], pathlib.Path(func.__code__.co_filename).name, func.__name__
@@ -53,6 +62,8 @@ def schedule_task(*args, **kwargs):
 
 
 def schedule_status():
+    global timezone  # noqa: PLW0603
+
     for job in sorted(schedule.get_jobs(), key=lambda job: job.next_run):
         logging.info("Schedule run of %-7s: %s", job.job_func.keywords["name"], job.next_run)
 
@@ -63,24 +74,28 @@ def schedule_status():
 
         logging.info(
             "Now is %s, time to next jobs is %d hour(s) %d minute(s) %d second(s)",
-            datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).strftime(
-                "%Y-%m-%d %H:%M"
-            ),
+            datetime.datetime.now(
+                tz=datetime.timezone(datetime.timedelta(hours=timezone["offset"]))
+            ).strftime("%Y-%m-%d %H:%M"),
             hours,
             minutes,
             seconds,
         )
 
 
-def set_schedule(schedule_data, timezone):
+def set_schedule(schedule_data):
+    global timezone  # noqa: PLW0603
+
     schedule.clear()
 
     for entry in schedule_data:
         args = (entry["func"],) + entry["args"]
-        schedule.every().day.at(entry["time"], timezone).do(schedule_task, *args, name=entry["name"])
+        schedule.every().day.at(entry["time"], pytz.timezone(timezone["zone"])).do(
+            schedule_task, *args, name=entry["name"]
+        )
 
 
-def schedule_worker(queue, timezone, liveness_path, check_interval_sec):
+def schedule_worker(queue, liveness_path, check_interval_sec):
     global should_terminate
     global executed_job  # noqa: PLW0603
 
@@ -99,7 +114,7 @@ def schedule_worker(queue, timezone, liveness_path, check_interval_sec):
             while not queue.empty():
                 logging.debug("Regist scheduled job")
                 schedule_data = queue.get()
-                set_schedule(schedule_data, timezone)
+                set_schedule(schedule_data)
                 schedule_status()
 
             schedule.run_pending()
