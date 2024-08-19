@@ -11,12 +11,22 @@ Options:
 """
 
 import logging
+import signal
 
 import rasp_aqua.control
 import rasp_aqua.scheduler
 
 NAME = "rasp-aqua"
 VERSION = "0.1.0"
+
+
+def sig_handler(num, frame):
+    global should_terminate
+
+    logging.warning("receive signal {num}".format(num=num))
+
+    if num == signal.SIGTERM:
+        rasp_aqua.control.term()
 
 
 ######################################################################
@@ -35,3 +45,5 @@ if __name__ == "__main__":
     config = my_lib.config.load(config_file)
 
     rasp_aqua.control.execute(config)
+
+    signal.signal(signal.SIGTERM, sig_handler)
