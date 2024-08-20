@@ -37,6 +37,10 @@ def _clear():
     my_lib.footprint.clear(pathlib.Path(config["liveness"]["file"]["scheduler"]))
     my_lib.rpi.gpio.hist_clear()
 
+    yield
+
+    rasp_aqua.control.term()
+
 
 def move_to(time_machine, hour):
     target_time = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))).replace(
@@ -66,7 +70,6 @@ def test_init_CO2_off_AIR_on(time_machine):
 
     rasp_aqua.control.execute(config, 0.1)
     time.sleep(0.5)
-    rasp_aqua.control.term()
 
     gpio_check(
         [
@@ -85,7 +88,6 @@ def test_init_CO2_off_AIR_off(time_machine):
 
     rasp_aqua.control.execute(config, 0.1)
     time.sleep(0.5)
-    rasp_aqua.control.term()
 
     gpio_check(
         [
@@ -104,7 +106,6 @@ def test_init_CO2_on_AIR_off(time_machine):
 
     rasp_aqua.control.execute(config, 0.1)
     time.sleep(0.5)
-    rasp_aqua.control.term()
 
     gpio_check(
         [
@@ -191,4 +192,13 @@ def test_schedule(time_machine):
         ]
     )
 
-    rasp_aqua.control.term()
+
+def test_healthz():
+    import healthz
+
+    config = my_lib.config.load(CONFIG_FILE)
+
+    rasp_aqua.control.execute(config, 0.1)
+    time.sleep(0.5)
+
+    assert healthz.check_liveness(config)

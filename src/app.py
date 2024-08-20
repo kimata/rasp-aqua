@@ -20,10 +20,10 @@ NAME = "rasp-aqua"
 VERSION = "0.1.0"
 
 
-def sig_handler(num, frame):
+def sig_handler(num, frame):  # noqa: ARG001
     global should_terminate
 
-    logging.warning("receive signal {num}".format(num=num))
+    logging.warning("receive signal %d", num)
 
     if num == signal.SIGTERM:
         rasp_aqua.control.term()
