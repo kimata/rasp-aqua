@@ -63,7 +63,7 @@ def gpio_check(expect_list):
 
 
 ######################################################################
-def test_init_CO2_off_AIR_on(time_machine):
+def test_init_CO2_off_AIR_on(time_machine):  # noqa: N802
     config = my_lib.config.load(CONFIG_FILE)
 
     move_to(time_machine, 7)
@@ -81,7 +81,7 @@ def test_init_CO2_off_AIR_on(time_machine):
     )
 
 
-def test_init_CO2_off_AIR_off(time_machine):
+def test_init_CO2_off_AIR_off(time_machine):  # noqa: N802
     config = my_lib.config.load(CONFIG_FILE)
 
     move_to(time_machine, 9)
@@ -99,7 +99,7 @@ def test_init_CO2_off_AIR_off(time_machine):
     )
 
 
-def test_init_CO2_on_AIR_off(time_machine):
+def test_init_CO2_on_AIR_off(time_machine):  # noqa: N802
     config = my_lib.config.load(CONFIG_FILE)
 
     move_to(time_machine, 12)
@@ -201,4 +201,12 @@ def test_healthz():
     rasp_aqua.control.execute(config, 0.1)
     time.sleep(0.5)
 
-    assert healthz.check_liveness(config)
+    assert healthz.check_liveness(
+        [
+            {
+                "name": "scheduler",
+                "liveness_file": pathlib.Path(config["liveness"]["file"]["scheduler"]),
+                "interval": config["liveness"]["interval_sec"],
+            }
+        ]
+    )

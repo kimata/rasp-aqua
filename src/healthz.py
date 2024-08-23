@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     target_list = [
         {
-            "name": "webapp",
+            "name": "scheduler",
             "liveness_file": pathlib.Path(config["liveness"]["file"]),
             "interval": config["liveness"]["interval_sec"],
         }

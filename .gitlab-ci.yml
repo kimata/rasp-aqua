@@ -97,7 +97,7 @@ deploy:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: never
     - changes:
-        - pyoroject.toml
+        - pyproject.toml
         - src/**/*
       when: on_success
     - when: never
