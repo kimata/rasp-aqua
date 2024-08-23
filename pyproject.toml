@@ -15,7 +15,7 @@ dependencies = [
     "pyyaml>=6.0.1",
     "schedule>=1.2.2",
     "rpi-lgpio>=0.6",
-    "my-lib @ git+https://github.com/kimata/my-py-lib@c93ad83b845ec083bb021b2866b7a7063bcc733c",
+    "my-lib @ git+https://github.com/kimata/my-py-lib@7f7dfeb5070dc9100564c62428c1f92de51792dc",
 ]
 
 [build-system]
