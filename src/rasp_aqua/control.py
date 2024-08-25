@@ -10,19 +10,18 @@ import rasp_aqua.valve
 
 
 def check_time_in_range(start, end):
-    time_curr = datetime.datetime.now(
-        tz=datetime.timezone(datetime.timedelta(hours=rasp_aqua.scheduler.timezone["offset"]))
-    ).time()
+    timezone = datetime.timezone(datetime.timedelta(hours=rasp_aqua.scheduler.timezone["offset"]))
+    time_curr = datetime.datetime.now(tz=timezone).time()
 
-    time_start = datetime.datetime.strptime(start, "%H:%M").time()
-    time_end = datetime.datetime.strptime(end, "%H:%M").time()
+    time_start = datetime.datetime.strptime(start, "%H:%M").replace(tzinfo=timezone).time()
+    time_end = datetime.datetime.strptime(end, "%H:%M").replace(tzinfo=timezone).time()
 
     if time_start <= time_end:
         if time_start <= time_curr <= time_end:
             return (True, 0)
         else:
             return (False, 0)
-    else:
+    else:  # noqa: PLR5501
         if time_curr >= time_start:
             return (True, 1)
         elif time_curr <= time_end:
@@ -75,13 +74,7 @@ def init_valve(config):
                     end=config["valve"][target]["control"]["off"],
                 )
 
-        logging.info(
-            "initialize {target} {mode}, because {reason}".format(
-                target=target,
-                mode=mode.upper(),
-                reason=reason,
-            )
-        )
+        logging.info("initialize %s %s, because %s", target, mode.upper(), reason)
         rasp_aqua.valve.control(
             rasp_aqua.valve.TARGET[target.upper()],
             my_lib.rpi.gpio.level[config["valve"][target]["mode"][mode]],
@@ -92,7 +85,7 @@ def set_schedule(config, queue):
     task_list = []
     for target in ["air", "co2"]:
         for mode in ["on", "off"]:
-            task_list.append(
+            task_list.append(  # noqa: PERF401
                 {
                     "name": f"{target} {mode}",
                     "time": config["valve"][target]["control"][mode],

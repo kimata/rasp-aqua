@@ -16,6 +16,7 @@ import threading
 import time
 import traceback
 
+import my_lib.footprint
 import pytz
 import schedule
 
@@ -42,7 +43,7 @@ def init(timezone_, queue, liveness_file, check_interval_sec):
 
 def schedule_task(*args, **kwargs):
     global executed_job  # noqa: PLW0603
-    global timezone  # noqa: PLW0603
+    global timezone
 
     func = args[0]
 
@@ -62,7 +63,7 @@ def schedule_task(*args, **kwargs):
 
 
 def schedule_status():
-    global timezone  # noqa: PLW0603
+    global timezone
 
     for job in sorted(schedule.get_jobs(), key=lambda job: job.next_run):
         logging.info("Schedule run of %-7s: %s", job.job_func.keywords["name"], job.next_run)
@@ -84,7 +85,7 @@ def schedule_status():
 
 
 def set_schedule(schedule_data):
-    global timezone  # noqa: PLW0603
+    global timezone
 
     schedule.clear()
 
@@ -95,12 +96,9 @@ def set_schedule(schedule_data):
         )
 
 
-def schedule_worker(queue, liveness_path, check_interval_sec):
+def schedule_worker(queue, liveness_file, check_interval_sec):
     global should_terminate
     global executed_job  # noqa: PLW0603
-
-    liveness_file = pathlib.Path(liveness_path)
-    liveness_file.parent.mkdir(parents=True, exist_ok=True)
 
     logging.info("Start schedule worker")
 
@@ -132,7 +130,8 @@ def schedule_worker(queue, liveness_path, check_interval_sec):
 
         # NOTE: 10秒以上経過していたら，liveness を更新する
         if (check_interval_sec >= 10) or (i % (10 / check_interval_sec) == 0):
-            liveness_file.touch()
+            my_lib.footprint.update(liveness_file)
+
         i += 1
 
     logging.info("Terminate schedule worker")
