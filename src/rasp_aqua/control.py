@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import pathlib
 from multiprocessing import Queue
 
 import my_lib.rpi
@@ -106,7 +107,7 @@ def execute(config, check_interval_sec=10):
     queue = Queue()
 
     rasp_aqua.scheduler.init(
-        config["timezone"], queue, config["liveness"]["file"]["scheduler"], check_interval_sec
+        config["timezone"], queue, pathlib.Path(config["liveness"]["file"]["scheduler"]), check_interval_sec
     )
 
     init_valve(config)
