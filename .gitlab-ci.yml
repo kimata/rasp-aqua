@@ -19,7 +19,7 @@ build-image:
     - mv aqua_config/rasp-aqua.yaml config.yaml
     - git config --global --add safe.directory ${PWD}
 
-    - docker buildx create --name ${BUILDER} --config script/buildkitd.toml --use
+    - docker buildx create --name ${BUILDER} --use
     - docker buildx use ${BUILDER}
     - docker buildx build --platform linux/amd64,linux/arm64/v8
       --cache-from type=registry,ref=${CI_REGISTRY_IMAGE}:cache
