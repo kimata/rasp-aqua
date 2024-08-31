@@ -3,7 +3,7 @@ FROM python:3.12.5-bookworm AS build
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install --no-install-recommends --assume-yes \
-    gcc \
+    clang \
     curl
 
 ENV PYTHONDONTWRITEBYTECODE=1
