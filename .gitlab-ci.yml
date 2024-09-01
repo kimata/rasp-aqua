@@ -96,11 +96,7 @@ deploy:
     # NOTE: 自動実行ではデプロイしない
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: never
-    - changes:
-        - pyproject.toml
-        - src/**/*
-      when: on_success
-    - when: never
+    - when: on_success
 
 renovate:
   stage: renovate

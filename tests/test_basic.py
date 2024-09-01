@@ -204,9 +204,10 @@ def test_healthz():
     assert healthz.check_liveness(
         [
             {
-                "name": "scheduler",
-                "liveness_file": pathlib.Path(config["liveness"]["file"]["scheduler"]),
+                "name": name,
+                "liveness_file": pathlib.Path(config["liveness"]["file"][name]),
                 "interval": config["liveness"]["interval_sec"],
             }
+            for name in ["scheduler"]
         ]
     )
