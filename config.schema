@@ -1,0 +1,140 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "timezone": {
+            "type": "object",
+            "properties": {
+                "offset": {
+                    "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "valve": {
+            "type": "object",
+            "properties": {
+                "air": {
+                    "type": "object",
+                    "properties": {
+                        "gpio": {
+                            "type": "integer"
+                        },
+                        "control": {
+                            "type": "object",
+                            "properties": {
+                                "on": {
+                                    "type": "string"
+                                },
+                                "off": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "off",
+                                "on"
+                            ]
+                        },
+                        "mode": {
+                            "type": "object",
+                            "properties": {
+                                "on": {
+                                    "type": "string"
+                                },
+                                "off": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "off",
+                                "on"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "control",
+                        "gpio",
+                        "mode"
+                    ]
+                },
+                "co2": {
+                    "type": "object",
+                    "properties": {
+                        "gpio": {
+                            "type": "integer"
+                        },
+                        "control": {
+                            "type": "object",
+                            "properties": {
+                                "on": {
+                                    "type": "string"
+                                },
+                                "off": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "off",
+                                "on"
+                            ]
+                        },
+                        "mode": {
+                            "type": "object",
+                            "properties": {
+                                "on": {
+                                    "type": "string"
+                                },
+                                "off": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "off",
+                                "on"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "control",
+                        "gpio",
+                        "mode"
+                    ]
+                }
+            },
+            "required": [
+                "air",
+                "co2"
+            ]
+        },
+        "liveness": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "type": "object",
+                    "properties": {
+                        "scheduler": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "scheduler"
+                    ]
+                },
+                "interval_sec": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "file",
+                "interval_sec"
+            ]
+        }
+    },
+    "required": [
+        "liveness",
+        "valve"
+    ]
+
+}

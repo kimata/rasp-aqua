@@ -13,7 +13,7 @@ dependencies = [
     "pytz>=2024.1",
     "schedule>=1.2.2",
     "rpi-lgpio>=0.6",
-"    my-lib @ git+https://github.com/kimata/my-py-lib@4b9b8a47b15a3f0e8bd3e462b85e4f28ca523e1c",
+    "my-lib @ git+https://github.com/kimata/my-py-lib@21098330ebc65598e4ef32cc8fb48212799cd605",
 ]
 
 [build-system]
