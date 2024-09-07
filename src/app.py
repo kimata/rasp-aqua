@@ -6,7 +6,7 @@ Usage:
   rasp-aqua.py [-c CONFIG] [-d]
 
 Options:
-  -c CONFIG     : CONFIG を設定ファイルとして読み込んで実行します．[default: config.yaml]
+  -c CONFIG         : CONFIG を設定ファイルとして読み込んで実行します．[default: config.yaml]
   -d                : デバッグモードで動作します．
 """
 

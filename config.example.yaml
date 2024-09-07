@@ -1,28 +1,28 @@
 timezone:
-  offset: 9
-  zone: Asia/Tokyo
+    offset: 9
+    zone: Asia/Tokyo
 
 valve:
-  air:
-    gpio: 27
-    control:
-      "on": "20:00"
-      "off": "08:00"
-    mode:
-      "on": LOW
-      "off": HIGH
+    air:
+        gpio: 27
+        control:
+            "on": "20:00"
+            "off": "08:00"
+        mode:
+            "on": LOW
+            "off": HIGH
 
-  co2:
-    gpio: 17
-    control:
-      "on": "11:00"
-      "off": "15:00"
-    mode:
-      "on": HIGH
-      "off": LOW
+    co2:
+        gpio: 17
+        control:
+            "on": "11:00"
+            "off": "15:00"
+        mode:
+            "on": HIGH
+            "off": LOW
 
 liveness:
-  file:
-    scheduler: /dev/shm/rasp-aqua/liveness/scheduler
+    file:
+        scheduler: /dev/shm/rasp-aqua/liveness/scheduler
 
-  interval_sec: 60
+    interval_sec: 60
