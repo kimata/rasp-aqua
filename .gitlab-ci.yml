@@ -47,7 +47,7 @@ test-walk-through:
         - test-prepare
 
     script:
-        - rye run pytest --cov-report=html -n auto tests/test_basic.py
+        - rye run pytest -n auto tests/test_basic.py
 
     cache:
         key: ${CI_JOB_NAME}
