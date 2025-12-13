@@ -58,7 +58,7 @@ jobs:
               run: rye run pytest --cov-report=html -n auto tests/test_basic.py
 
             - name: Upload coverage file
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v6
               if: always()
               with:
                 name: pytest
