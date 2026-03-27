@@ -79,4 +79,4 @@ jobs:
         steps:
             - name: Download test results
               id: deployment
-              uses: actions/deploy-pages@v4
+              uses: actions/deploy-pages@v5
